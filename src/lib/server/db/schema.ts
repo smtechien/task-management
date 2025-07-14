@@ -1,6 +1,11 @@
-import { pgTable, serial, integer } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, boolean, timestamp } from 'drizzle-orm/pg-core';
 
-export const user = pgTable('user', {
-	id: serial('id').primaryKey(),
-	age: integer('age')
+export const tasks = pgTable('tasks', {
+  id: serial('id').primaryKey(),
+  title: text('title').notNull(),
+  description: text('description'),
+  completed: boolean('completed').default(false).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(), // add anything later
 });
+
