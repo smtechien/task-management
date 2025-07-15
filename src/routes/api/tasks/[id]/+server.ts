@@ -3,6 +3,38 @@ import { db } from '$lib/server/db';
 import { tasks } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 
+//PUT:ID - Update task
+export async function PUT({ params, request}) {
+  const id = parseInt(params.id);
+  if (isNaN(id)) {
+    return json({ message: 'Invalid task ID'}, { status: 400 });
+  }
+
+  try {
+    const body = await request.json();
+    const { title, description, completed } = body;
+
+    if (typeof completed !== 'boolean') {
+      return json({ message: 'Invalid value for completed'}, { status: 400 });
+    }
+
+    const [updatedTask] = await db.update(tasks) // [updatedTask] array destructuring
+      .set({ title, description, completed, updatedAt: new Date()})
+      .where(eq(tasks.id, id))
+      .returning(); // get the updated task
+
+    // check if any task get updated
+    if (!updatedTask) {
+      return json({ message: 'Task not found' }, { status: 404 });
+    }
+    return json(updatedTask, { status: 200 });
+  } catch (error) {
+    console.error(`Error patching task ${id}`, error);
+    return json({ message: 'Failed to update task' }, { status: 500 });
+  }
+}
+
+
 // PATCH:ID - Update task's status of completion
 export async function PATCH({ params, request }) {
   // parsing id into integer

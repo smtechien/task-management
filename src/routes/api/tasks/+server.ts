@@ -1,11 +1,28 @@
 import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { tasks } from '$lib/server/db/schema';
+import { ilike, or, } from 'drizzle-orm';
 
-// GET /api/tasks - fetch all tasks
-export async function GET() {
+// GET /api/tasks - fetch all tasks or by keyword
+export async function GET({ url }) {
 	try {
-		const allTasks = await db.query.tasks.findMany();
+	  const keyword = url.searchParams.get('keyword');
+    let allTasks;
+
+    if (keyword) {
+      allTasks = await db.query.tasks.findMany({
+        where: or(
+          ilike(tasks.title, `%${keyword}%`),
+          ilike(tasks.description,`%${keyword}%`)
+        ),
+       orderBy: (tasks, { desc }) => [desc(tasks.createdAt)],
+      })
+    } else {
+      allTasks = await db.query.tasks.findMany({
+        orderBy: (tasks, { desc }) => [desc(tasks.createdAt)],
+      })
+
+    }
 		return json(allTasks, { status: 200 });
 	} catch (error) {
 		console.error('Error fetching tasks: ', error);
