@@ -1,39 +1,7 @@
 import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
-import { tasks } from '$lib/server/db/schema';
+import { bigTasks } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
-
-//PUT:ID - Update task
-export async function PUT({ params, request}) {
-  const id = parseInt(params.id);
-  if (isNaN(id)) {
-    return json({ message: 'Invalid task ID'}, { status: 400 });
-  }
-
-  try {
-    const body = await request.json();
-    const { title, description, completed } = body;
-
-    if (typeof completed !== 'boolean') {
-      return json({ message: 'Invalid value for completed'}, { status: 400 });
-    }
-
-    const [updatedTask] = await db.update(tasks) // [updatedTask] array destructuring
-      .set({ title, description, completed, updatedAt: new Date()})
-      .where(eq(tasks.id, id))
-      .returning(); // get the updated task
-
-    // check if any task get updated
-    if (!updatedTask) {
-      return json({ message: 'Task not found' }, { status: 404 });
-    }
-    return json(updatedTask, { status: 200 });
-  } catch (error) {
-    console.error(`Error patching task ${id}`, error);
-    return json({ message: 'Failed to update task' }, { status: 500 });
-  }
-}
-
 
 // PATCH:ID - Update task's status of completion
 export async function PATCH({ params, request }) {
@@ -49,17 +17,19 @@ export async function PATCH({ params, request }) {
   try {
     // get value from completed field
     const body = await request.json();
-    const { completed } = body;
+    //const { isCompleted } = body;
 
     // make sure var completed is boolean
-    if (typeof completed !== 'boolean') {
-      return json({ message: 'Invalid value for completed'}, { status: 400 });
-    }
+    //if (typeof isCompleted !== 'boolean') {
+    //  return json({ message: 'Invalid value for completed'}, { status: 400 });
+    // }
 
     // update the task by id
-    const [updatedTask] = await db.update(tasks) // [updatedTask] array destructuring
-      .set({ completed, updatedAt: new Date()})
-      .where(eq(tasks.id, id))
+    const now = new Date();
+    const updatedAtString = now.toISOString();
+    const [updatedTask] = await db.update(bigTasks) // [updatedTask] array destructuring
+      .set({ ...body, updatedAt: updatedAtString}) // it works but no validation performed
+      .where(eq(bigTasks.id, id))
       .returning(); // get the updated task
 
     // check if any task get updated
@@ -90,7 +60,7 @@ export async function DELETE({ params }) {
   try {
     
     // delete task by id
-    const result = await db.delete(tasks).where(eq(tasks.id, id)).returning();
+    const result = await db.delete(bigTasks).where(eq(bigTasks.id, id)).returning();
 
     // check if the result is 0 (no task get deleted)
     if (result.length === 0 ) {

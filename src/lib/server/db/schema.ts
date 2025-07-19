@@ -6,9 +6,10 @@ export const bigTasks = pgTable('big_tasks', {
   title: text('title').notNull(),
   description: text('description'),
   details: text('details'),
+  dueDate: timestamp('due_date', { withTimezone: true, mode: 'string'}),
   isCompleted: boolean('is_completed').default(false).notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(), // add anything later
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'string'}).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string'}).defaultNow().notNull(), // add anything later
 });
 
 export const smallTasks = pgTable('small_tasks', {
@@ -16,10 +17,11 @@ export const smallTasks = pgTable('small_tasks', {
   title: text('title').notNull(),
   description: text('description'),
   details: text('details'),
+  dueDate: timestamp('due_date', { withTimezone: true, mode: 'string'}),
   isCompleted: boolean('is_completed').default(false).notNull(),
   parentTaskId: integer('parent_task_id').references(() => bigTasks.id, {onDelete: 'cascade'}),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(), // add anything later
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'string'}).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string'}).defaultNow().notNull(), // add anything later
 });
 
 export const bigTasksRelations = relations(bigTasks, ({ many }) => ({
